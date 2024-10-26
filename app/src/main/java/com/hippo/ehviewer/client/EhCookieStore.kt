@@ -166,8 +166,30 @@ object EhCookieStore : CookieJar {
      */
     suspend fun clear() {
         updateLock.withLock {
+            val cloudflareCookies = ArrayList<Cookie>()
+            for ((domain, cookieSet) in map) {
+                val host = domain.removePrefix(".")
+                val url = runCatching { "https://$host/".toHttpUrl() }.getOrNull() ?: continue
+                val accepted: MutableList<Cookie> = ArrayList()
+                val expired: MutableList<Cookie> = ArrayList()
+                cookieSet[url, accepted, expired]
+                accepted.filterTo(cloudflareCookies) { it.name == KEY_CLOUDFLARE }
+            }
+
             map.clear()
             db.clear()
+
+            for (cookie in cloudflareCookies) {
+                var set = map[cookie.domain]
+                if (set == null) {
+                    set = CookieSet()
+                    map[cookie.domain] = set
+                }
+                set.add(cookie)
+                if (cookie.persistent) {
+                    db.add(cookie)
+                }
+            }
         }
     }
 

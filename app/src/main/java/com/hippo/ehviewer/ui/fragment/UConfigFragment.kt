@@ -36,6 +36,7 @@ import com.hippo.ehviewer.R
 import com.hippo.ehviewer.client.EhCookieStore
 import com.hippo.ehviewer.client.EhUrl
 import com.hippo.ehviewer.ui.scene.BaseScene
+import com.hippo.ehviewer.util.addQuicHints
 import com.hippo.ehviewer.util.setDefaultSettings
 import com.hippo.ehviewer.widget.DialogWebChromeClient
 import com.hippo.util.launchIO
@@ -70,6 +71,7 @@ class UConfigFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         progress!!.visibility = View.VISIBLE
+        addQuicHints(url)
         webView!!.loadUrl(url)
         showTip(R.string.apply_tip, BaseScene.LENGTH_LONG)
         requireActivity().addMenuProvider(

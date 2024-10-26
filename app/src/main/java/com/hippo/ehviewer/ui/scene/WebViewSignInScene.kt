@@ -26,6 +26,7 @@ import androidx.lifecycle.lifecycleScope
 import com.hippo.ehviewer.client.EhCookieStore
 import com.hippo.ehviewer.client.EhUrl
 import com.hippo.ehviewer.client.EhUtils
+import com.hippo.ehviewer.util.addQuicHints
 import com.hippo.ehviewer.util.setDefaultSettings
 import com.hippo.ehviewer.widget.DialogWebChromeClient
 import com.hippo.util.launchIO
@@ -51,11 +52,15 @@ class WebViewSignInScene : SolidScene() {
             removeAllCookies(null)
             removeSessionCookies(null)
         }
+        EhCookieStore.loadForWebView(EhUrl.URL_SIGN_IN) {
+            it.name == EhCookieStore.KEY_CLOUDFLARE
+        }
         return WebView(requireContext()).apply {
             setBackgroundColor(theme.resolveColor(android.R.attr.colorBackground))
             setDefaultSettings()
             webViewClient = LoginWebViewClient()
             webChromeClient = DialogWebChromeClient(context)
+            addQuicHints(EhUrl.URL_SIGN_IN)
             loadUrl(EhUrl.URL_SIGN_IN)
             mWebView = this
         }
@@ -108,6 +113,10 @@ class WebViewSignInScene : SolidScene() {
                     getId = true
                 } else if (EhCookieStore.KEY_IPB_PASS_HASH == cookie.name) {
                     getHash = true
+                } else if (EhCookieStore.KEY_CLOUDFLARE == cookie.name) {
+                    viewLifecycleOwner.lifecycleScope.launchIO {
+                        addCookie(cookie.domain, cookie)
+                    }
                 }
             }
             if (getId && getHash) {

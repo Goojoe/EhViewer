@@ -35,6 +35,7 @@ import com.hippo.ehviewer.client.EhCookieStore
 import com.hippo.ehviewer.client.EhEngine
 import com.hippo.ehviewer.client.EhUrl
 import com.hippo.ehviewer.client.EhUtils
+import com.hippo.ehviewer.ui.WebViewActivity
 import com.hippo.scene.Announcer
 import com.hippo.util.ExceptionUtils
 import com.hippo.util.launchIO
@@ -263,10 +264,13 @@ class SignInScene :
     }
 
     private fun showResultErrorDialog(e: Throwable) {
-        AlertDialog.Builder(requireContext())
+        val context = requireContext()
+        AlertDialog.Builder(context)
             .setTitle(R.string.sign_in_failed)
             .setMessage("${ExceptionUtils.getReadableString(e)}\n\n${getString(R.string.sign_in_failed_tip)}")
-            .setPositiveButton(R.string.get_it, null)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                context.startActivity(WebViewActivity.newIntent(context, EhUrl.URL_FORUMS))
+            }
             .show()
     }
 

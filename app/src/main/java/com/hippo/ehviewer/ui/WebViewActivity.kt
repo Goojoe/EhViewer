@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.hippo.ehviewer.client.EhCookieStore
+import com.hippo.ehviewer.util.addQuicHints
 import com.hippo.ehviewer.util.setDefaultSettings
 
 class WebViewActivity : EhActivity() {
@@ -31,6 +32,7 @@ class WebViewActivity : EhActivity() {
         EhCookieStore.loadForWebView(url) {
             it.name != EhCookieStore.KEY_CLOUDFLARE
         }
+        addQuicHints(url)
         webView!!.loadUrl(url)
     }
 

@@ -3,7 +3,11 @@ package com.hippo.ehviewer.util
 import android.annotation.SuppressLint
 import android.webkit.WebSettings
 import android.webkit.WebView
+import androidx.annotation.OptIn
+import androidx.webkit.Profile
+import androidx.webkit.ProfileStore
 import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import com.hippo.ehviewer.EhApplication
 import com.hippo.ehviewer.Settings
 
@@ -24,7 +28,7 @@ val WebViewVersion = run {
         ?.toIntOrNull()
     uaVersion ?: pkgVersion ?: MINIMUM_WEBVIEW_VERSION
 }
-val isWebViewOutdated = WebViewVersion < MINIMUM_WEBVIEW_VERSION
+var isWebViewOutdated = WebViewVersion < MINIMUM_WEBVIEW_VERSION
 
 @SuppressLint("SetJavaScriptEnabled")
 fun WebView.setDefaultSettings() = settings.run {
@@ -33,4 +37,16 @@ fun WebView.setDefaultSettings() = settings.run {
     javaScriptEnabled = true
     domStorageEnabled = true
     userAgentString = Settings.userAgent!!
+}
+
+@OptIn(Profile.ExperimentalAddQuicHints::class)
+fun addQuicHints(url: String) {
+    if (WebViewFeature.isFeatureSupported(WebViewFeature.ADD_QUIC_HINTS_V1) &&
+        WebViewFeature.isFeatureSupported(WebViewFeature.MULTI_PROFILE)
+    ) {
+        val defPro = ProfileStore.getInstance().getProfile(Profile.DEFAULT_PROFILE_NAME)
+        defPro?.addQuicHints(setOf(url))
+    } else {
+        isWebViewOutdated = true
+    }
 }

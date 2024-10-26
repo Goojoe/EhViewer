@@ -34,6 +34,7 @@ import com.hippo.ehviewer.client.EhEngine
 import com.hippo.ehviewer.client.EhUrl
 import com.hippo.ehviewer.client.EhUtils
 import com.hippo.ehviewer.client.exception.CloudflareBypassException
+import com.hippo.ehviewer.ui.WebViewActivity
 import com.hippo.util.ExceptionUtils
 import com.hippo.util.getClipboardManager
 import com.hippo.util.getTextFromClipboard
@@ -180,10 +181,13 @@ class CookieSignInScene :
             }
         }
 
-        AlertDialog.Builder(requireContext())
+        val context = requireContext()
+        AlertDialog.Builder(context)
             .setTitle(R.string.sign_in_failed)
             .setMessage(message)
-            .setPositiveButton(R.string.get_it, null)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                context.startActivity(WebViewActivity.newIntent(context, EhUrl.URL_FORUMS))
+            }
             .apply {
                 if (isCloudflareError) {
                     setNegativeButton(R.string.ignore) { _, _ -> ok() }
