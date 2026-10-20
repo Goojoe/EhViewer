@@ -81,17 +81,10 @@ class WebDavConfigExportPreference(
         val manager = context.getSystemService<ClipboardManager>() ?: return false
         val label = context.getString(R.string.settings_webdav_config_clip_label)
         val clip = ClipData.newPlainText(label, text)
-        val copied = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // The system shows its own confirmation on Android 13+, so no toast here.
-            manager.setPrimaryClip(clip)
-        } else {
-            manager.setPrimaryClip(clip)
-            true
-        }
-        if (copied) {
+        // The system shows its own confirmation on Android 13+, so no toast there.
+        val copied = manager.setPrimaryClip(clip)
+        if (copied && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             Toast.makeText(context, R.string.settings_webdav_config_copied, Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(context, R.string.settings_webdav_config_copy_failed, Toast.LENGTH_SHORT).show()
         }
         copied
     } catch (_: Exception) {

@@ -167,6 +167,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.serialization.cbor)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.utils)
     implementation(libs.jsoup)
 
