@@ -288,4 +288,18 @@
         <item>1</item>
         <item>2</item>
     </string-array>
+
+    <string-array name="webdav_auto_backup_entries">
+        <item>@string/settings_webdav_auto_backup_disabled</item>
+        <item>@string/settings_webdav_auto_backup_1_day</item>
+        <item>@string/settings_webdav_auto_backup_3_days</item>
+        <item>@string/settings_webdav_auto_backup_7_days</item>
+    </string-array>
+
+    <string-array name="webdav_auto_backup_entry_values" translatable="false">
+        <item>0</item>
+        <item>24</item>
+        <item>72</item>
+        <item>168</item>
+    </string-array>
 </resources>

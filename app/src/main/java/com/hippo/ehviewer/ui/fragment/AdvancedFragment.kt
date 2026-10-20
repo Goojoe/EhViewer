@@ -35,6 +35,7 @@ import com.hippo.ehviewer.EhDB
 import com.hippo.ehviewer.GetText
 import com.hippo.ehviewer.R
 import com.hippo.ehviewer.Settings as AppSettings
+import com.hippo.ehviewer.backup.WebDavBackupManager
 import com.hippo.ehviewer.client.EhClient
 import com.hippo.ehviewer.client.EhRequest
 import com.hippo.ehviewer.client.data.FavListUrlBuilder
@@ -244,6 +245,8 @@ class AdvancedFragment : BasePreferenceFragment() {
         val exportData = findPreference<Preference>(KEY_EXPORT_DATA)
         val backupFavorite = findPreference<Preference>(KEY_BACKUP_FAVORITE)
         val openByDefault = findPreference<Preference>(KEY_OPEN_BY_DEFAULT)
+        val webdavUpload = findPreference<Preference>(KEY_WEBDAV_UPLOAD)
+        val webdavDownload = findPreference<Preference>(KEY_WEBDAV_DOWNLOAD)
         if (isAtLeastS) {
             openByDefault!!.onPreferenceClickListener = this
         } else {
@@ -253,6 +256,8 @@ class AdvancedFragment : BasePreferenceFragment() {
         importData!!.onPreferenceClickListener = this
         exportData!!.onPreferenceClickListener = this
         backupFavorite!!.onPreferenceClickListener = this
+        webdavUpload?.onPreferenceClickListener = this
+        webdavDownload?.onPreferenceClickListener = this
         appLanguage!!.onPreferenceChangeListener = this
     }
 
@@ -289,6 +294,27 @@ class AdvancedFragment : BasePreferenceFragment() {
                 ExceptionUtils.throwIfFatal(e)
                 showTip(R.string.settings_advanced_backup_favorite_failed, BaseScene.LENGTH_SHORT)
             }
+            return true
+        } else if (KEY_WEBDAV_UPLOAD == key) {
+            lifecycleScope.launchIO {
+                WebDavBackupManager.uploadBackup(requireActivity(), isAuto = false)
+            }
+            return true
+        } else if (KEY_WEBDAV_DOWNLOAD == key) {
+            AlertDialog.Builder(requireActivity())
+                .setMessage(R.string.settings_advanced_webdav_download_confirm)
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                    lifecycleScope.launchIO {
+                        val success = WebDavBackupManager.downloadRestore(requireActivity())
+                        if (success) {
+                            withUIContext {
+                                requireActivity().recreate()
+                            }
+                        }
+                    }
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
             return true
         } else if (KEY_OPEN_BY_DEFAULT == key) {
             try {
@@ -408,5 +434,7 @@ class AdvancedFragment : BasePreferenceFragment() {
         private const val KEY_EXPORT_DATA = "export_data"
         private const val KEY_OPEN_BY_DEFAULT = "open_by_default"
         private const val KEY_BACKUP_FAVORITE = "backup_favorite"
+        private const val KEY_WEBDAV_UPLOAD = "webdav_upload"
+        private const val KEY_WEBDAV_DOWNLOAD = "webdav_download"
     }
 }

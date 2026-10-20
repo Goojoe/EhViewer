@@ -354,6 +354,37 @@ object EhDB {
     }
 
     @Synchronized
+    fun exportDB(context: Context, destFile: java.io.File): Boolean {
+        val ehExportName = "eh.export.db"
+        runCatching {
+            // Delete old export db
+            context.deleteDatabase(ehExportName)
+            val newDb =
+                databaseBuilder(context, EhDatabase::class.java, ehExportName).build()
+
+            // Copy data to a export db
+            copyDao(db.downloadsDao(), newDb.downloadsDao())
+            copyDao(db.downloadLabelDao(), newDb.downloadLabelDao())
+            copyDao(db.downloadDirnameDao(), newDb.downloadDirnameDao())
+            copyDao(db.historyDao(), newDb.historyDao())
+            copyDao(db.quickSearchDao(), newDb.quickSearchDao())
+            copyDao(db.localFavoritesDao(), newDb.localFavoritesDao())
+            copyDao(db.filterDao(), newDb.filterDao())
+
+            // Close export db so we can copy it
+            newDb.close()
+
+            // Copy export db to destFile
+            val dbFile = context.getDatabasePath(ehExportName)
+            UniFile.fromFile(dbFile)!! sendTo UniFile.fromFile(destFile)!!
+            return true
+        }.onFailure {
+            it.printStackTrace()
+        }
+        return false
+    }
+
+    @Synchronized
     fun exportDB(context: Context, uri: Uri): Boolean {
         val ehExportName = "eh.export.db"
         runCatching {
@@ -382,6 +413,66 @@ object EhDB {
             it.printStackTrace()
         }
         return false
+    }
+
+    @Synchronized
+    fun importDB(context: Context, file: java.io.File): String? {
+        val tmpDBName = "tmp.db"
+        runCatching {
+            val oldDB = databaseBuilder(context, EhDatabase::class.java, tmpDBName)
+                .createFromInputStream { java.io.FileInputStream(file) }.build()
+            // Download label
+            val manager = DownloadManager
+            runCatching {
+                val downloadLabelList = oldDB.downloadLabelDao().list()
+                manager.addDownloadLabel(downloadLabelList)
+            }
+            // Downloads
+            runCatching {
+                val downloadInfoList = oldDB.downloadsDao().list()
+                manager.addDownload(downloadInfoList, false)
+            }
+            // Download dirname
+            runCatching {
+                oldDB.downloadDirnameDao().list().forEach {
+                    putDownloadDirname(it.gid, it.dirname)
+                }
+            }
+            // History
+            runCatching {
+                val historyInfoList = oldDB.historyDao().list()
+                putHistoryInfo(historyInfoList)
+            }
+            // QuickSearch
+            runCatching {
+                val quickSearchList = oldDB.quickSearchDao().list()
+                val currentQuickSearchList = db.quickSearchDao().list()
+                val importList = quickSearchList.mapNotNull { newQS ->
+                    newQS.takeIf { currentQuickSearchList.find { it.name == newQS.name } == null }
+                }
+                importQuickSearch(importList)
+            }
+            // LocalFavorites
+            runCatching {
+                oldDB.localFavoritesDao().list().forEach {
+                    putLocalFavorites(it)
+                }
+            }
+            // Filter
+            runCatching {
+                val filterList = oldDB.filterDao().list()
+                val currentFilterList = db.filterDao().list()
+                filterList.forEach {
+                    if (it !in currentFilterList) addFilter(it)
+                }
+            }
+            oldDB.close()
+            context.deleteDatabase(tmpDBName)
+        }.onFailure {
+            it.printStackTrace()
+            return context.getString(R.string.settings_advanced_import_data_cant_read)
+        }
+        return null
     }
 
     /**

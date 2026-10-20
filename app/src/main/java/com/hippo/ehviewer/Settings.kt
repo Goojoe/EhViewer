@@ -182,6 +182,22 @@ object Settings {
     private const val DEFAULT_APP_LINK_VERIFY_TIP = false
 
     /********************
+     ****** WebDAV Backup
+     ********************/
+    const val KEY_WEBDAV_SERVER = "webdav_server"
+    private const val DEFAULT_WEBDAV_SERVER = ""
+    const val KEY_WEBDAV_USER = "webdav_user"
+    private const val DEFAULT_WEBDAV_USER = ""
+    const val KEY_WEBDAV_PASSWORD = "webdav_password"
+    private const val DEFAULT_WEBDAV_PASSWORD = ""
+    const val KEY_WEBDAV_AUTO_BACKUP_INTERVAL = "webdav_auto_backup_interval"
+    private const val DEFAULT_WEBDAV_AUTO_BACKUP_INTERVAL = "0"
+    const val KEY_WEBDAV_WIFI_ONLY = "webdav_wifi_only"
+    private const val DEFAULT_WEBDAV_WIFI_ONLY = true
+    const val KEY_WEBDAV_LAST_BACKUP_TIME = "webdav_last_backup_time"
+    private const val DEFAULT_WEBDAV_LAST_BACKUP_TIME = 0L
+
+    /********************
      ****** Favorites
      ********************/
     private const val KEY_FAV_CAT_0 = "fav_cat_0"
@@ -657,6 +673,42 @@ object Settings {
         get() = getBoolean(KEY_APP_LINK_VERIFY_TIP, DEFAULT_APP_LINK_VERIFY_TIP)
     fun putAppLinkVerifyTip(value: Boolean) {
         putBoolean(KEY_APP_LINK_VERIFY_TIP, value)
+    }
+
+    val webDavServer: String
+        get() = getString(KEY_WEBDAV_SERVER, DEFAULT_WEBDAV_SERVER) ?: ""
+    fun putWebDavServer(value: String) {
+        putString(KEY_WEBDAV_SERVER, value)
+    }
+
+    val webDavUser: String
+        get() = getString(KEY_WEBDAV_USER, DEFAULT_WEBDAV_USER) ?: ""
+    fun putWebDavUser(value: String) {
+        putString(KEY_WEBDAV_USER, value)
+    }
+
+    val webDavPassword: String
+        get() = getString(KEY_WEBDAV_PASSWORD, DEFAULT_WEBDAV_PASSWORD) ?: ""
+    fun putWebDavPassword(value: String) {
+        putString(KEY_WEBDAV_PASSWORD, value)
+    }
+
+    val webDavAutoBackupInterval: Long
+        get() = (getString(KEY_WEBDAV_AUTO_BACKUP_INTERVAL, DEFAULT_WEBDAV_AUTO_BACKUP_INTERVAL) ?: "0").toLongOrNull() ?: 0L
+    fun putWebDavAutoBackupInterval(value: Long) {
+        putString(KEY_WEBDAV_AUTO_BACKUP_INTERVAL, value.toString())
+    }
+
+    val webDavWifiOnly: Boolean
+        get() = getBoolean(KEY_WEBDAV_WIFI_ONLY, DEFAULT_WEBDAV_WIFI_ONLY)
+    fun putWebDavWifiOnly(value: Boolean) {
+        putBoolean(KEY_WEBDAV_WIFI_ONLY, value)
+    }
+
+    val webDavLastBackupTime: Long
+        get() = getLong(KEY_WEBDAV_LAST_BACKUP_TIME, DEFAULT_WEBDAV_LAST_BACKUP_TIME)
+    fun putWebDavLastBackupTime(value: Long) {
+        putLong(KEY_WEBDAV_LAST_BACKUP_TIME, value)
     }
 
     var favCat: Array<String>

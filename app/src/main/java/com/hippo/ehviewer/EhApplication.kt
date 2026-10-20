@@ -121,6 +121,9 @@ class EhApplication :
             launchIO {
                 theDawnOfNewDay()
             }
+            launchIO {
+                com.hippo.ehviewer.backup.WebDavBackupManager.checkAndRunAutoBackup(this@EhApplication)
+            }
         }
         mIdGenerator.setNextId(Settings.getInt(KEY_GLOBAL_STUFF_NEXT_ID, 0))
         if (BuildConfig.DEBUG) {
