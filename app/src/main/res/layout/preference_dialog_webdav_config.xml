@@ -10,7 +10,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/settings_webdav_config_payload_hint"
-        android:textAppearance="?attr/textAppearanceBodySmall" />
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="@dimen/text_little_small" />
 
     <EditText
         android:id="@+id/webdav_config_payload"

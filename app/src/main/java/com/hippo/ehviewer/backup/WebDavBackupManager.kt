@@ -1,11 +1,15 @@
 package com.hippo.ehviewer.backup
 
+import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import android.os.Process
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
@@ -25,6 +29,7 @@ import java.util.Base64
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerialName
@@ -44,6 +49,8 @@ object WebDavBackupManager {
     private const val DB_ENTRY_NAME = "eh.export.db"
     private const val PREFS_ENTRY_NAME = "preferences.xml"
     private const val CONFIG_PAYLOAD_PREFIX = "ehviewer-webdav:"
+    private const val RESTART_REQUEST_CODE = 1003
+    private const val RESTART_DELAY_MILLIS = 600L
 
     private val operationMutex = Mutex()
 
@@ -500,6 +507,7 @@ object WebDavBackupManager {
                 withUIContext {
                     Toast.makeText(context, successMsg, Toast.LENGTH_SHORT).show()
                 }
+                scheduleRestart(context)
                 return true
             } else {
                 showNotification(
@@ -532,6 +540,63 @@ object WebDavBackupManager {
             return false
         } finally {
             tempZip.delete()
+        }
+    }
+
+    /**
+     * Schedules a restart of the whole application process after a successful restore.
+     *
+     * The database, the downloads and the in-memory [Settings] are all bound to the
+     * process that was running before the restore, so a plain activity `recreate()` is
+     * not enough. An alarm is used instead of killing the process right away: it lets
+     * the UI thread show the toast and keeps the system from treating the kill as a
+     * crash, and the launcher activity is started again when the alarm fires.
+     */
+    fun scheduleRestart(context: Context) {
+        withUIContext {
+            val launcherIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            }
+            val pendingIntent = launcherIntent?.let {
+                PendingIntent.getActivity(
+                    context,
+                    RESTART_REQUEST_CODE,
+                    it,
+                    PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                )
+            }
+            if (pendingIntent == null) {
+                Toast.makeText(context, R.string.webdav_restore_restart_failed, Toast.LENGTH_LONG).show()
+                return@withUIContext
+            }
+            Toast.makeText(context, R.string.webdav_restore_restarting, Toast.LENGTH_SHORT).show()
+            val alarmManager = context.getSystemService<AlarmManager>()
+            try {
+                alarmManager?.setExact(
+                    AlarmManager.RTC,
+                    System.currentTimeMillis() + RESTART_DELAY_MILLIS,
+                    pendingIntent,
+                )
+            } catch (e: Exception) {
+                // Some OEM ROMs reject exact alarms; a restart is important enough to fall back
+                // to an inexact one instead of leaving the app in a half-restored state.
+                e.printStackTrace()
+                try {
+                    alarmManager?.set(
+                        AlarmManager.RTC,
+                        System.currentTimeMillis() + RESTART_DELAY_MILLIS,
+                        pendingIntent,
+                    )
+                } catch (_: Exception) {
+                }
+            }
+            // Give the toast and the alarm dispatching a moment before the process goes away.
+            launchIO {
+                kotlinx.coroutines.delay(RESTART_DELAY_MILLIS + 1000L)
+                withUIContext {
+                    Process.killProcess(Process.myPid())
+                }
+            }
         }
     }
 

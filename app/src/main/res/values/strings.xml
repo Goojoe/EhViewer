@@ -618,6 +618,8 @@
     <string name="webdav_restore_success">Restore completed successfully</string>
     <string name="webdav_restore_failed">Restore failed: %s</string>
     <string name="webdav_restore_corrupted">Backup package is missing database file</string>
+    <string name="webdav_restore_restarting">Restored successfully, restarting EhViewer…</string>
+    <string name="webdav_restore_restart_failed">Restored successfully, please restart EhViewer manually</string>
     <string name="settings_advanced_open_by_default">Open by default</string>
     <string name="settings_about">About</string>
     <string name="settings_about_declaration" translatable="false">EhViewer</string>

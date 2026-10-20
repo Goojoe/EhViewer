@@ -304,13 +304,11 @@ class AdvancedFragment : BasePreferenceFragment() {
             AlertDialog.Builder(requireActivity())
                 .setMessage(R.string.settings_advanced_webdav_download_confirm)
                 .setPositiveButton(android.R.string.ok) { _, _ ->
+                    // downloadRestore() restarts the whole process on success, an activity
+                    // recreate() would leave the restored database and settings stale.
+                    val activity = requireActivity()
                     lifecycleScope.launchIO {
-                        val success = WebDavBackupManager.downloadRestore(requireActivity())
-                        if (success) {
-                            withUIContext {
-                                requireActivity().recreate()
-                            }
-                        }
+                        WebDavBackupManager.downloadRestore(activity)
                     }
                 }
                 .setNegativeButton(android.R.string.cancel, null)

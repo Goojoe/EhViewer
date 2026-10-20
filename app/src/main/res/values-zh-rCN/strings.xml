@@ -589,6 +589,8 @@
     <string name="webdav_restore_success">数据恢复成功</string>
     <string name="webdav_restore_failed">恢复失败：%s</string>
     <string name="webdav_restore_corrupted">备份文件中缺少数据库文件</string>
+    <string name="webdav_restore_restarting">恢复成功，正在重启应用…</string>
+    <string name="webdav_restore_restart_failed">恢复成功，请手动重启应用</string>
     <string name="settings_advanced_open_by_default">默认打开</string>
     <string name="settings_about">关于</string>
     <string name="settings_about_declaration_summary">EhViewer 与 E-Hentai.org 无任何联系</string>
