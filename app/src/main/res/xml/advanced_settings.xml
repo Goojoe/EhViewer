@@ -101,6 +101,16 @@
             android:title="@string/settings_advanced_webdav_account"
             app:iconSpaceReserved="false" />
 
+        <com.hippo.ehviewer.preference.WebDavConfigExportPreference
+            android:key="webdav_config_export"
+            android:title="@string/settings_webdav_config_export"
+            app:iconSpaceReserved="false" />
+
+        <com.hippo.ehviewer.preference.WebDavConfigImportPreference
+            android:key="webdav_config_import"
+            android:title="@string/settings_webdav_config_import"
+            app:iconSpaceReserved="false" />
+
         <Preference
             android:key="webdav_upload"
             android:summary="@string/settings_advanced_webdav_upload_summary"

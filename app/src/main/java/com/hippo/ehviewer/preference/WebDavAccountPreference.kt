@@ -10,6 +10,7 @@ import androidx.appcompat.app.AlertDialog
 import com.google.android.material.textfield.TextInputLayout
 import com.hippo.ehviewer.R
 import com.hippo.ehviewer.Settings
+import com.hippo.ehviewer.backup.WebDavBackupManager
 import com.hippo.preference.DialogPreference
 import com.hippo.yorozuya.ViewUtils
 
@@ -25,6 +26,8 @@ class WebDavAccountPreference(
     private var mUsername: EditText? = null
     private var mPasswordLayout: TextInputLayout? = null
     private var mPassword: EditText? = null
+    private var mRemotePathLayout: TextInputLayout? = null
+    private var mRemotePath: EditText? = null
 
     init {
         dialogLayoutResource = R.layout.preference_dialog_webdav_account
@@ -37,10 +40,11 @@ class WebDavAccountPreference(
             context.getString(R.string.settings_webdav_account_not_configured)
         } else {
             val user = Settings.webDavUser
+            val path = WebDavBackupManager.normalizeRemotePath(Settings.webDavRemotePath)
             if (user.isBlank()) {
-                server
+                "$server $path"
             } else {
-                "$user @ $server"
+                "$user @ $server $path"
             }
         }
     }
@@ -60,10 +64,13 @@ class WebDavAccountPreference(
         mUsername = ViewUtils.`$$`(dialog, R.id.username) as EditText
         mPasswordLayout = ViewUtils.`$$`(dialog, R.id.password_input_layout) as TextInputLayout
         mPassword = ViewUtils.`$$`(dialog, R.id.password) as EditText
+        mRemotePathLayout = ViewUtils.`$$`(dialog, R.id.remote_path_input_layout) as TextInputLayout
+        mRemotePath = ViewUtils.`$$`(dialog, R.id.remote_path) as EditText
 
         mServerUrl!!.setText(Settings.webDavServer)
         mUsername!!.setText(Settings.webDavUser)
         mPassword!!.setText(Settings.webDavPassword)
+        mRemotePath!!.setText(Settings.webDavRemotePath.ifBlank { Settings.DEFAULT_WEBDAV_REMOTE_PATH })
     }
 
     override fun onDialogClosed(positiveResult: Boolean) {
@@ -74,27 +81,41 @@ class WebDavAccountPreference(
         mUsername = null
         mPasswordLayout = null
         mPassword = null
+        mRemotePathLayout = null
+        mRemotePath = null
     }
 
     override fun onClick(v: View) {
         val dialog = dialog
-        if (dialog == null || mServerUrl == null || mUsername == null || mPassword == null) {
+        if (dialog == null || mServerUrl == null || mUsername == null || mPassword == null || mRemotePath == null) {
             return
         }
 
         val server = mServerUrl!!.text.toString().trim()
         val user = mUsername!!.text.toString().trim()
         val password = mPassword!!.text.toString()
+        val remotePath = mRemotePath!!.text.toString().trim()
 
-        if (server.isNotBlank() && !server.startsWith("http://") && !server.startsWith("https://")) {
+        if (server.isNotBlank() && !WebDavBackupManager.isServerUrl(server)) {
             mServerLayout?.error = context.getString(R.string.settings_webdav_invalid_url)
             return
         }
         mServerLayout?.error = null
 
-        Settings.putWebDavServer(server)
-        Settings.putWebDavUser(user)
-        Settings.putWebDavPassword(password)
+        if (WebDavBackupManager.isServerUrl(remotePath)) {
+            mRemotePathLayout?.error = context.getString(R.string.settings_webdav_invalid_remote_path)
+            return
+        }
+        mRemotePathLayout?.error = null
+
+        WebDavBackupManager.commitConfig(
+            WebDavBackupManager.WebDavConfig(
+                server = server,
+                user = user,
+                password = password,
+                path = WebDavBackupManager.normalizeRemotePath(remotePath),
+            ),
+        )
         updateSummary()
         dialog.dismiss()
     }

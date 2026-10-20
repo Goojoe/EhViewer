@@ -21,11 +21,15 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.Base64
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import okhttp3.Credentials
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
@@ -39,8 +43,100 @@ object WebDavBackupManager {
     private const val BACKUP_ZIP_NAME = "ehviewer_backup.zip"
     private const val DB_ENTRY_NAME = "eh.export.db"
     private const val PREFS_ENTRY_NAME = "preferences.xml"
+    private const val CONFIG_PAYLOAD_PREFIX = "ehviewer-webdav:"
 
     private val operationMutex = Mutex()
+
+    /**
+     * Portable representation of the WebDAV settings, used by the Base64 import / export.
+     *
+     * Every field is optional on decode so that a payload produced by an older or newer
+     * build still imports: missing values keep the current setting untouched.
+     */
+    @Serializable
+    data class WebDavConfig(
+        @SerialName("v") val version: Int = 1,
+        @SerialName("server") val server: String = "",
+        @SerialName("user") val user: String = "",
+        @SerialName("password") val password: String = "",
+        @SerialName("path") val path: String = Settings.DEFAULT_WEBDAV_REMOTE_PATH,
+    )
+
+    private val configJson = Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+        prettyPrint = false
+    }
+
+    fun currentConfig(): WebDavConfig = WebDavConfig(
+        server = Settings.webDavServer,
+        user = Settings.webDavUser,
+        password = Settings.webDavPassword,
+        path = Settings.webDavRemotePath,
+    )
+
+    /**
+     * Serializes the current WebDAV settings to JSON and Base64 encodes it.
+     *
+     * The encoded text is prefixed with a short marker so that an accidental paste into
+     * the import field can be recognized without trial-and-error decoding.
+     */
+    fun exportConfig(): String {
+        val json = configJson.encodeToString(WebDavConfig.serializer(), currentConfig())
+        val base64 = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
+        return CONFIG_PAYLOAD_PREFIX + base64
+    }
+
+    /**
+     * Decodes a payload produced by [exportConfig] and writes it into the settings.
+     *
+     * @return the applied configuration, or `null` when the input is not a valid payload.
+     */
+    fun importConfig(input: String): WebDavConfig? {
+        val payload = input.trim().replace(Regex("\\s"), "")
+        if (payload.isEmpty()) return null
+        var base64 = payload
+        if (base64.startsWith(CONFIG_PAYLOAD_PREFIX, ignoreCase = true)) {
+            base64 = base64.substring(CONFIG_PAYLOAD_PREFIX.length)
+        }
+        val json = try {
+            String(Base64.getDecoder().decode(base64), Charsets.UTF_8)
+        } catch (_: IllegalArgumentException) {
+            return null
+        }
+        val config = try {
+            configJson.decodeFromString(WebDavConfig.serializer(), json)
+        } catch (_: Exception) {
+            return null
+        }
+        if (!isValidServerUrl(config.server)) return null
+        val applied = config.copy(
+            server = config.server.trim(),
+            user = config.user.trim(),
+            path = normalizeRemotePath(config.path),
+        )
+        commitConfig(applied)
+        return applied
+    }
+
+    /**
+     * Persists the given configuration into the settings.
+     *
+     * Shared by the account dialog and the Base64 import, so that both write the same keys.
+     */
+    fun commitConfig(config: WebDavConfig) {
+        Settings.putWebDavServer(config.server)
+        Settings.putWebDavUser(config.user)
+        Settings.putWebDavPassword(config.password)
+        Settings.putWebDavRemotePath(config.path)
+    }
+
+    private fun isValidServerUrl(server: String): Boolean {
+        val url = server.trim().toHttpUrlOrNull() ?: return false
+        return url.scheme == "https" || url.scheme == "http"
+    }
+
+    fun isServerUrl(raw: String): Boolean = raw.trim().startsWith("http://") || raw.trim().startsWith("https://")
 
     private fun getNotificationManager(context: Context): NotificationManager? {
         val nm = context.getSystemService<NotificationManager>() ?: return null
@@ -90,12 +186,34 @@ object WebDavBackupManager {
 
     fun isConfigured(): Boolean = Settings.webDavServer.isNotBlank()
 
-    private fun getWebDavTargetUrl(): String {
-        var base = Settings.webDavServer.trim()
-        if (!base.endsWith("/")) {
-            base += "/"
+    /**
+     * Normalizes a user supplied remote path: trims blanks, prepends a slash when missing
+     * and guarantees a trailing slash. Blank input falls back to the default path.
+     */
+    fun normalizeRemotePath(raw: String): String {
+        var path = raw.trim()
+        if (path.isEmpty()) {
+            return Settings.DEFAULT_WEBDAV_REMOTE_PATH
         }
-        return base + BACKUP_ZIP_NAME
+        if (!path.startsWith("/")) {
+            path = "/$path"
+        }
+        if (!path.endsWith("/")) {
+            path += "/"
+        }
+        return path
+    }
+
+    /**
+     * Builds the backup file URL: [server] + [remote path] + `ehviewer_backup.zip`.
+     * A remote path without trailing slash is treated as a directory name, not as a file.
+     */
+    private fun getWebDavTargetUrl(): String {
+        val server = Settings.webDavServer.trim().let {
+            if (it.endsWith("/")) it else "$it/"
+        }
+        val remotePath = normalizeRemotePath(Settings.webDavRemotePath).trimStart('/')
+        return server + remotePath + BACKUP_ZIP_NAME
     }
 
     private fun ensureRemoteDirectoryExists(baseUrl: String, authHeader: String?) {
@@ -109,12 +227,13 @@ object WebDavBackupManager {
         }
 
         val client = EhApplication.nonCacheOkHttpClient
+        // Skip the last segment: it is the backup file name, not a directory.
         for (i in 0 until pathSegments.size - 1) {
             val seg = pathSegments[i]
             if (seg.isEmpty()) continue
             currentUrl += "/$seg"
             val mkcolReq = Request.Builder()
-                .url(currentUrl)
+                .url("$currentUrl/")
                 .method("MKCOL", null)
                 .apply {
                     if (!authHeader.isNullOrBlank()) {

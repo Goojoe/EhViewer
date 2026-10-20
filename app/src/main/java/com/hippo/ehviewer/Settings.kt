@@ -190,6 +190,8 @@ object Settings {
     private const val DEFAULT_WEBDAV_USER = ""
     const val KEY_WEBDAV_PASSWORD = "webdav_password"
     private const val DEFAULT_WEBDAV_PASSWORD = ""
+    const val KEY_WEBDAV_REMOTE_PATH = "webdav_remote_path"
+    const val DEFAULT_WEBDAV_REMOTE_PATH = "/EhViewer/"
     const val KEY_WEBDAV_AUTO_BACKUP_INTERVAL = "webdav_auto_backup_interval"
     private const val DEFAULT_WEBDAV_AUTO_BACKUP_INTERVAL = "0"
     const val KEY_WEBDAV_WIFI_ONLY = "webdav_wifi_only"
@@ -691,6 +693,12 @@ object Settings {
         get() = getString(KEY_WEBDAV_PASSWORD, DEFAULT_WEBDAV_PASSWORD) ?: ""
     fun putWebDavPassword(value: String) {
         putString(KEY_WEBDAV_PASSWORD, value)
+    }
+
+    val webDavRemotePath: String
+        get() = getString(KEY_WEBDAV_REMOTE_PATH, DEFAULT_WEBDAV_REMOTE_PATH) ?: DEFAULT_WEBDAV_REMOTE_PATH
+    fun putWebDavRemotePath(value: String) {
+        putString(KEY_WEBDAV_REMOTE_PATH, value)
     }
 
     val webDavAutoBackupInterval: Long
