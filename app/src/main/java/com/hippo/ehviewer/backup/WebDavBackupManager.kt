@@ -88,9 +88,7 @@ object WebDavBackupManager {
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
     }
 
-    fun isConfigured(): Boolean {
-        return Settings.webDavServer.isNotBlank()
-    }
+    fun isConfigured(): Boolean = Settings.webDavServer.isNotBlank()
 
     private fun getWebDavTargetUrl(): String {
         var base = Settings.webDavServer.trim()
@@ -241,7 +239,13 @@ object WebDavBackupManager {
         }
 
         val startingMsg = context.getString(R.string.webdav_backup_in_progress)
-        showNotification(context, NOTIFICATION_ID_PROGRESS, context.getString(R.string.webdav_backup_notification_title), startingMsg, ongoing = true)
+        showNotification(
+            context,
+            NOTIFICATION_ID_PROGRESS,
+            context.getString(R.string.webdav_backup_notification_title),
+            startingMsg,
+            ongoing = true,
+        )
 
         if (!isAuto) {
             withUIContext {
@@ -272,7 +276,12 @@ object WebDavBackupManager {
                     cancelNotification(context, NOTIFICATION_ID_PROGRESS)
                     Settings.putWebDavLastBackupTime(System.currentTimeMillis())
                     val successMsg = context.getString(R.string.webdav_backup_success)
-                    showNotification(context, NOTIFICATION_ID_RESULT, context.getString(R.string.webdav_backup_notification_title), successMsg)
+                    showNotification(
+                        context,
+                        NOTIFICATION_ID_RESULT,
+                        context.getString(R.string.webdav_backup_notification_title),
+                        successMsg,
+                    )
                     withUIContext {
                         Toast.makeText(context, successMsg, Toast.LENGTH_SHORT).show()
                     }
@@ -284,8 +293,16 @@ object WebDavBackupManager {
         } catch (e: Exception) {
             e.printStackTrace()
             cancelNotification(context, NOTIFICATION_ID_PROGRESS)
-            val failMsg = context.getString(R.string.webdav_backup_failed, e.localizedMessage ?: e.message ?: "")
-            showNotification(context, NOTIFICATION_ID_RESULT, context.getString(R.string.webdav_backup_notification_title), failMsg)
+            val failMsg = context.getString(
+                R.string.webdav_backup_failed,
+                e.localizedMessage ?: e.message ?: "",
+            )
+            showNotification(
+                context,
+                NOTIFICATION_ID_RESULT,
+                context.getString(R.string.webdav_backup_notification_title),
+                failMsg,
+            )
             withUIContext {
                 Toast.makeText(context, failMsg, Toast.LENGTH_LONG).show()
             }
@@ -311,7 +328,13 @@ object WebDavBackupManager {
         }
 
         val startingMsg = context.getString(R.string.webdav_restore_in_progress)
-        showNotification(context, NOTIFICATION_ID_PROGRESS, context.getString(R.string.webdav_restore_notification_title), startingMsg, ongoing = true)
+        showNotification(
+            context,
+            NOTIFICATION_ID_PROGRESS,
+            context.getString(R.string.webdav_restore_notification_title),
+            startingMsg,
+            ongoing = true,
+        )
 
         withUIContext {
             Toast.makeText(context, startingMsg, Toast.LENGTH_SHORT).show()
@@ -349,13 +372,23 @@ object WebDavBackupManager {
             cancelNotification(context, NOTIFICATION_ID_PROGRESS)
             if (restoreError == null) {
                 val successMsg = context.getString(R.string.webdav_restore_success)
-                showNotification(context, NOTIFICATION_ID_RESULT, context.getString(R.string.webdav_restore_notification_title), successMsg)
+                showNotification(
+                    context,
+                    NOTIFICATION_ID_RESULT,
+                    context.getString(R.string.webdav_restore_notification_title),
+                    successMsg,
+                )
                 withUIContext {
                     Toast.makeText(context, successMsg, Toast.LENGTH_SHORT).show()
                 }
                 return true
             } else {
-                showNotification(context, NOTIFICATION_ID_RESULT, context.getString(R.string.webdav_restore_notification_title), restoreError)
+                showNotification(
+                    context,
+                    NOTIFICATION_ID_RESULT,
+                    context.getString(R.string.webdav_restore_notification_title),
+                    restoreError,
+                )
                 withUIContext {
                     Toast.makeText(context, restoreError, Toast.LENGTH_LONG).show()
                 }
@@ -364,8 +397,16 @@ object WebDavBackupManager {
         } catch (e: Exception) {
             e.printStackTrace()
             cancelNotification(context, NOTIFICATION_ID_PROGRESS)
-            val failMsg = context.getString(R.string.webdav_restore_failed, e.localizedMessage ?: e.message ?: "")
-            showNotification(context, NOTIFICATION_ID_RESULT, context.getString(R.string.webdav_restore_notification_title), failMsg)
+            val failMsg = context.getString(
+                R.string.webdav_restore_failed,
+                e.localizedMessage ?: e.message ?: "",
+            )
+            showNotification(
+                context,
+                NOTIFICATION_ID_RESULT,
+                context.getString(R.string.webdav_restore_notification_title),
+                failMsg,
+            )
             withUIContext {
                 Toast.makeText(context, failMsg, Toast.LENGTH_LONG).show()
             }
