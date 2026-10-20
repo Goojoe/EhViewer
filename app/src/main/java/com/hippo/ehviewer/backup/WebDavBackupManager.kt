@@ -65,7 +65,7 @@ object WebDavBackupManager {
     ) {
         val nm = getNotificationManager(context) ?: return
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher)
+            .setSmallIcon(android.R.drawable.stat_sys_download)
             .setContentTitle(title)
             .setContentText(content)
             .setOngoing(ongoing)
