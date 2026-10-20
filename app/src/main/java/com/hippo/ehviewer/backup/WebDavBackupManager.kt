@@ -18,6 +18,7 @@ import com.hippo.ehviewer.EhDB
 import com.hippo.ehviewer.R
 import com.hippo.ehviewer.Settings
 import com.hippo.util.launchIO
+import com.hippo.util.launchUI
 import com.hippo.util.withUIContext
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -553,7 +554,7 @@ object WebDavBackupManager {
      * crash, and the launcher activity is started again when the alarm fires.
      */
     fun scheduleRestart(context: Context) {
-        withUIContext {
+        launchUI {
             val launcherIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             }
@@ -567,7 +568,7 @@ object WebDavBackupManager {
             }
             if (pendingIntent == null) {
                 Toast.makeText(context, R.string.webdav_restore_restart_failed, Toast.LENGTH_LONG).show()
-                return@withUIContext
+                return@launchUI
             }
             Toast.makeText(context, R.string.webdav_restore_restarting, Toast.LENGTH_SHORT).show()
             val alarmManager = context.getSystemService<AlarmManager>()
@@ -592,10 +593,8 @@ object WebDavBackupManager {
             }
             // Give the toast and the alarm dispatching a moment before the process goes away.
             launchIO {
-                kotlinx.coroutines.delay(RESTART_DELAY_MILLIS + 1000L)
-                withUIContext {
-                    Process.killProcess(Process.myPid())
-                }
+                delay(RESTART_DELAY_MILLIS + 1000L)
+                Process.killProcess(Process.myPid())
             }
         }
     }
