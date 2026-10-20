@@ -82,11 +82,11 @@ class WebDavConfigExportPreference(
         val label = context.getString(R.string.settings_webdav_config_clip_label)
         val clip = ClipData.newPlainText(label, text)
         // The system shows its own confirmation on Android 13+, so no toast there.
-        val copied = manager.setPrimaryClip(clip)
-        if (copied && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        manager.setPrimaryClip(clip)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             Toast.makeText(context, R.string.settings_webdav_config_copied, Toast.LENGTH_SHORT).show()
         }
-        copied
+        true
     } catch (_: Exception) {
         false
     }
