@@ -123,13 +123,10 @@
             android:title="@string/settings_advanced_webdav_download"
             app:iconSpaceReserved="false" />
 
-        <rikka.preference.SimpleMenuPreference
-            android:defaultValue="0"
+        <com.hippo.ehviewer.preference.WebDavAutoBackupPreference
             android:key="webdav_auto_backup_interval"
             android:title="@string/settings_advanced_webdav_auto_backup"
-            app:entries="@array/webdav_auto_backup_entries"
-            app:entryValues="@array/webdav_auto_backup_entry_values"
-            app:useSimpleSummaryProvider="true"
+            android:defaultValue="0"
             app:iconSpaceReserved="false" />
 
         <SwitchPreferenceCompat

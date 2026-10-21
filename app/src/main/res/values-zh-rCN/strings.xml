@@ -576,6 +576,11 @@
     <string name="settings_webdav_auto_backup_1_day">每天</string>
     <string name="settings_webdav_auto_backup_3_days">每 3 天</string>
     <string name="settings_webdav_auto_backup_7_days">每 7 天</string>
+    <string name="settings_webdav_auto_backup_hours_hint">小时数（0 表示关闭）</string>
+    <string name="settings_webdav_auto_backup_every_hours">每 %1$d 小时</string>
+    <string name="settings_webdav_auto_backup_invalid">请输入有效小时数（0 或更大）</string>
+    <string name="settings_webdav_auto_backup_test">测试</string>
+    <string name="settings_webdav_auto_backup_test_started">正在开始 WebDAV 备份测试</string>
     <string name="settings_advanced_webdav_wifi_only">仅在 Wi-Fi 下自动备份</string>
     <string name="settings_advanced_webdav_wifi_only_summary">仅在连接无线网时才进行自动备份，节省流量</string>
     <string name="webdav_not_configured">请先配置 WebDAV 服务器与账号</string>

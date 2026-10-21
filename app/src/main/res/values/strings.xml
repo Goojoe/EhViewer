@@ -605,6 +605,11 @@
     <string name="settings_webdav_auto_backup_1_day">Every day</string>
     <string name="settings_webdav_auto_backup_3_days">Every 3 days</string>
     <string name="settings_webdav_auto_backup_7_days">Every 7 days</string>
+    <string name="settings_webdav_auto_backup_hours_hint">Hours (0 to disable)</string>
+    <string name="settings_webdav_auto_backup_every_hours">Every %1$d hours</string>
+    <string name="settings_webdav_auto_backup_invalid">Enter a valid number of hours (0 or greater)</string>
+    <string name="settings_webdav_auto_backup_test">Test</string>
+    <string name="settings_webdav_auto_backup_test_started">Starting a WebDAV backup test</string>
     <string name="settings_advanced_webdav_wifi_only">Backup only on Wi-Fi</string>
     <string name="settings_advanced_webdav_wifi_only_summary">Save cellular data by backing up only when connected to Wi-Fi</string>
     <string name="webdav_not_configured">Please configure WebDAV server and account first</string>
