@@ -26,7 +26,6 @@ class WebDavAutoBackupPreference(
 
     private val scope = CoroutineScope(Dispatchers.IO + Job())
     private var hoursView: EditText? = null
-    private var dialog: AlertDialog? = null
 
     init {
         dialogLayoutResource = R.layout.preference_dialog_webdav_auto_backup
@@ -45,7 +44,6 @@ class WebDavAutoBackupPreference(
 
     override fun onDialogCreated(dialog: AlertDialog) {
         super.onDialogCreated(dialog)
-        this.dialog = dialog
         hoursView?.apply {
             inputType = InputType.TYPE_CLASS_NUMBER
             setText(Settings.webDavAutoBackupInterval.takeIf { it > 0 }?.toString().orEmpty())
@@ -65,7 +63,6 @@ class WebDavAutoBackupPreference(
     override fun onDialogClosed(positiveResult: Boolean) {
         super.onDialogClosed(positiveResult)
         hoursView = null
-        dialog = null
     }
 
     override fun onClick(v: View) {
