@@ -4,9 +4,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.text.InputType
 import android.util.AttributeSet
-import android.view.View
 import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.hippo.ehviewer.R
@@ -22,7 +20,7 @@ import kotlinx.coroutines.launch
 class WebDavAutoBackupPreference(
     context: Context,
     attrs: AttributeSet? = null,
-) : DialogPreference(context, attrs), View.OnClickListener {
+) : DialogPreference(context, attrs) {
 
     private val scope = CoroutineScope(Dispatchers.IO + Job())
     private var hoursView: EditText? = null
@@ -34,16 +32,17 @@ class WebDavAutoBackupPreference(
 
     override fun onPrepareDialogBuilder(builder: AlertDialog.Builder) {
         super.onPrepareDialogBuilder(builder)
+        builder.setNegativeButton(R.string.settings_webdav_auto_backup_test, null)
         builder.setPositiveButton(android.R.string.ok, null)
     }
 
-    override fun onCreateDialogView(): View? = super.onCreateDialogView()?.also { view ->
+    override fun onCreateDialogView() = super.onCreateDialogView()?.also { view ->
         hoursView = ViewUtils.`$$`(view, R.id.webdav_auto_backup_hours) as EditText
-        ViewUtils.`$$`(view, R.id.webdav_auto_backup_test).setOnClickListener(this)
     }
 
     override fun onDialogCreated(dialog: AlertDialog) {
         super.onDialogCreated(dialog)
+        dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener { startTest() }
         hoursView?.apply {
             inputType = InputType.TYPE_CLASS_NUMBER
             setText(Settings.webDavAutoBackupInterval.takeIf { it > 0 }?.toString().orEmpty())
@@ -65,8 +64,7 @@ class WebDavAutoBackupPreference(
         hoursView = null
     }
 
-    override fun onClick(v: View) {
-        if (v.id != R.id.webdav_auto_backup_test) return
+    private fun startTest() {
         if (Settings.webDavServer.isBlank()) {
             Toast.makeText(context, R.string.webdav_not_configured, Toast.LENGTH_SHORT).show()
             return

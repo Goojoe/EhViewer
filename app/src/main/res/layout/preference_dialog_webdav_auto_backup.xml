@@ -14,15 +14,4 @@
         android:hint="@string/settings_webdav_auto_backup_hours_hint"
         android:inputType="number"
         android:singleLine="true" />
-
-    <TextView
-        android:id="@+id/webdav_auto_backup_test"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="8dp"
-        android:paddingVertical="6dp"
-        android:text="@string/settings_webdav_auto_backup_test"
-        android:textColor="?attr/colorPrimary" />
 </LinearLayout>
